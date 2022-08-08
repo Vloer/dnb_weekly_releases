@@ -4,14 +4,32 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import os
 from src.reddit import Reddit
+from src.spotify import Spotify
 
-r = Reddit()
-r.get_post(post_url='https://www.reddit.com/r/DnB/comments/wj64wp/this_weeks_new_tunes_technimatic_alix_perez_as/')
-r.set_genre_data()
-
-for genre in r.post_genres:
-    print(f'Genre {genre.name} has {len(genre.spotify_links)} links')
-
+# r = Reddit()
+# r.get_post(post_author='TELMxWILSON', title_contains='new tunes', subreddit='DnB')
+# r.set_genre_data()
+#
+# for genre in r.post_genres:
+#     print(f'Genre {genre.name} has {len(genre.spotify_links)} links')
+#     if genre.name == 'dancefloor':
+#         [print(link) for link in genre.spotify_links]
+links = [
+    'https://open.spotify.com/album/6EJ9Vyo8NAzOLy3BhwQc4w',
+    'https://open.spotify.com/track/1YF2iUHdWnbO3MWI7z5aQf',
+    'https://open.spotify.com/album/61blfrCUJ6runz1isPhuMd',
+    'https://open.spotify.com/album/6w3VkQovCWA7mB9rIlsTag',
+    'https://open.spotify.com/track/3XejA5R4AptKcmGPXnwAhD',
+    'https://open.spotify.com/album/6m0ADjLEfdOc1426UyHLrP',
+    'https://open.spotify.com/track/7sDuwiJlyfxsjkoUN1RC6F',
+    'https://open.spotify.com/album/0ZYsPQxRA80y5bEwlLQWmz',
+    'https://open.spotify.com/track/2DQuvfpU2uYaIk1BaBSJ15',
+    'https://open.spotify.com/track/2EK2hR0X1XYrPnfLCgCIXl',
+]
+s = Spotify()
+s.get_token()
+songs = s.get_list_of_songs(links)
+s.add_to_playlist(songs)
 
 txt = """
 ---
@@ -130,5 +148,3 @@ txt = """
 * Technical Itch, Doom Poets - Inbred Massacre *[Tech Itch]* | [**[Beatport]**](https://www.beatport.com/release/inbred-massacre/3811913), [**[Bandcamp]**](https://doompoets.techitch.com/album/nonexistent), [**[Spotify]**](https://open.spotify.com/track/63kQW0CdhRBTXPSy5cO9rY)
 * Tim Reaper, Dwarde - Aquatics EP *[Deep Jungle]* | [**[Beatport]**](https://www.beatport.com/release/aquatics-ep/3823291), [**[Spotify]**](https://open.spotify.com/album/5zk5ayP8jzOhJdRQkgJMJf)
 """
-
-

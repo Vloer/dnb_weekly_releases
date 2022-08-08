@@ -9,6 +9,7 @@ load_dotenv()
 
 class Reddit:
     def __init__(self):
+        self.authenticated: bool = False
         self.endpoint: str = 'https://oauth.reddit.com'
         self.app_user_agent: str = f'windows:REPLACE_APP_ID:vREPLACE_VERSION (by /u/REPLACE_USERNAME)'
         self.access_token: Optional[str] = None
@@ -19,10 +20,10 @@ class Reddit:
         self.post_segments: Optional[list] = []
         self.post_genres: Optional[list[Genre]] = []
 
-        if not self.access_token:
+        if not self.authenticated:
             self.get_token()
 
-    def get_token(self):
+    def get_token(self) -> None:
         api_secret = os.getenv('REDDIT_API_SECRET')
         reddit_app_id = os.getenv('REDDIT_APP_ID')
         auth = requests.auth.HTTPBasicAuth(reddit_app_id, api_secret)
@@ -47,8 +48,9 @@ class Reddit:
         res.raise_for_status()
         self.access_token = res.json()['access_token']
         self.token_type = res.json()['token_type']
+        self.authenticated = True
 
-    def get_post(self, post_author: str = None, title_contains: str = None, post_url: str = None, subreddit: str = None,
+    def get_post(self, post_author: str = None, title_contains: str = None, subreddit: str = None, post_url: str = None,
                  post_search_limit: int = 500) -> str:
         headers = {
             'User-Agent': self.app_user_agent,
@@ -82,7 +84,7 @@ class Reddit:
         self.post_url = post_data['url']
         return self.post_text
 
-    def read_segments(self, delimiter: str = '###'):
+    def read_segments(self, delimiter: str = '###') -> None:
         if not self.post_text:
             try:
                 self.get_post(self.post_url)
@@ -93,7 +95,7 @@ class Reddit:
         for seg in self.post_text.split(delimiter):
             self.post_segments.append(seg)
 
-    def set_genre_data(self):
+    def set_genre_data(self) -> None:
         if not self.post_segments:
             self.read_segments()
         for seg in self.post_segments:
@@ -111,7 +113,7 @@ class Genre:
 
         self.get_spotify_links()
 
-    def get_spotify_links(self):
+    def get_spotify_links(self) -> None:
         matches = re.findall(r'(?<=\[\*\*\[Spotify\]\*\*\]\()(.*)(?=\))', self.data)
         if len(matches) > 0:
             [self.spotify_links.append(m) for m in matches]
