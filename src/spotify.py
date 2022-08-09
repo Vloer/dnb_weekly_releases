@@ -18,6 +18,8 @@ class Spotify:
         self.auth_headers: dict = {}
         self.playlist_id: str = playlist_id_to_add_to
         self.all_song_links: list[str] = []
+        self.playlist_songs_names: list[str] = []
+        self.playlist_songs_uris: list[str] = []
 
         if not self.authenticated:
             self.get_token()
@@ -45,17 +47,20 @@ class Spotify:
             self.playlist_id = os.getenv('SPOTIFY_PLAYLIST_ID')
         playlist = self._check_playlist_exists()
         if playlist:
-            url = f'{self.endpoint}/playlists/{self.playlist_id}/tracks'
-            headers = self.auth_headers
-            headers['Content-Type'] = 'application/json'
-            headers['Authorization'] = f'Bearer {self.oauth_token}'
-            data = json.dumps({
-                'uris': songs
-            })
+            self.get_playlist_data(playlist)
+            songs_to_add = self.get_songs_to_add(songs)
+            if songs_to_add:
+                url = f'{self.endpoint}/playlists/{self.playlist_id}/tracks'
+                headers = self.auth_headers
+                headers['Content-Type'] = 'application/json'
+                headers['Authorization'] = f'Bearer {self.oauth_token}'
+                data = json.dumps({
+                    'uris': songs_to_add
+                })
 
-            res = requests.post(url, headers=headers, data=data)
-            res.raise_for_status()
-            print(f"Added {len(songs)} to playlist!")
+                res = requests.post(url, headers=headers, data=data)
+                res.raise_for_status()
+            print(f"\nAdded {len(songs_to_add)} new song(s) to playlist!")
 
     @staticmethod
     def convert_track_to_uri(track_id: str) -> str:
@@ -102,3 +107,30 @@ class Spotify:
             else:
                 song_list.append(songs)
         return song_list
+
+    def get_playlist_data(self, playlist: dict, print_output: bool = True) -> None:
+        playlist_songs_names = []
+        playlist_songs_uris = []
+        for track in playlist['tracks']['items']:
+            song = track['track']
+            name = song['name']
+            artist = song['artists'][0]['name']
+            uri = song['uri']
+            playlist_songs_names.append(f'{artist}-{name}')
+            playlist_songs_uris.append(f'{uri}')
+            if print_output:
+                print(f'Found \"{artist}-{name}\" in playlist')
+        self.playlist_songs_uris = playlist_songs_uris
+        self.playlist_songs_names = playlist_songs_names
+
+    def check_song_already_in_playlist(self, song: str, is_uri: bool = True) -> bool:
+        if is_uri:
+            return song in self.playlist_songs_uris
+        return song in self.playlist_songs_names
+
+    def get_songs_to_add(self, songs: list[str]) -> list[str]:
+        new_list = []
+        for song in songs:
+            if not self.check_song_already_in_playlist(song):
+                new_list.append(song)
+        return new_list
