@@ -60,7 +60,7 @@ class Spotify:
 
                 res = requests.post(url, headers=headers, data=data)
                 res.raise_for_status()
-            print(f"\nAdded {len(songs_to_add)} new song(s) to playlist!")
+            print(f"\nAdded {len(songs_to_add)} new song(s) to playlist {playlist['name']!r}!")
 
     @staticmethod
     def convert_track_to_uri(track_id: str) -> str:
@@ -98,7 +98,7 @@ class Spotify:
                 song_list.append(song['uri'])
         return song_list
 
-    def get_list_of_songs(self, data: list[str]) -> list[str]:
+    def get_list_of_songs_correct_format(self, data: list[str]) -> list[str]:
         song_list = []
         for link in data:
             songs = self.extract_uris_from_album_or_song(link)

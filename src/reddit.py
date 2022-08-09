@@ -1,4 +1,5 @@
 import requests.auth
+import requests
 from typing import Optional
 import os
 import re
@@ -119,4 +120,3 @@ class Genre:
             [self.spotify_links.append(m) for m in matches]
         else:
             print(f'No matches found for {self.name!r}!')
-

@@ -6,14 +6,15 @@ import os
 from src.reddit import Reddit
 from src.spotify import Spotify
 
-# r = Reddit()
+r = Reddit()
 # r.get_post(post_author='TELMxWILSON', title_contains='new tunes', subreddit='DnB')
-# r.set_genre_data()
-#
-# for genre in r.post_genres:
-#     print(f'Genre {genre.name} has {len(genre.spotify_links)} links')
-#     if genre.name == 'dancefloor':
-#         [print(link) for link in genre.spotify_links]
+r.get_post(post_url='https://www.reddit.com/r/DnB/comments/wj64wp/this_weeks_new_tunes_technimatic_alix_perez_as/')
+r.set_genre_data()
+
+for genre in r.post_genres:
+    print(f'Genre {genre.name} has {len(genre.spotify_links)} links')
+    if genre.name == 'dancefloor':
+        [print(link) for link in genre.spotify_links]
 links = [
     'https://open.spotify.com/album/6EJ9Vyo8NAzOLy3BhwQc4w',
     'https://open.spotify.com/track/1YF2iUHdWnbO3MWI7z5aQf',
@@ -28,7 +29,7 @@ links = [
 ]
 s = Spotify()
 s.get_token()
-songs = s.get_list_of_songs(links)
+songs = s.get_list_of_songs_correct_format(links)
 s.add_to_playlist(songs)
 
 txt = """
