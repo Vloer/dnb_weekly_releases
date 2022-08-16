@@ -100,7 +100,7 @@ class Reddit:
         if not self.post_segments:
             self.read_segments()
         for seg in self.post_segments:
-            genre_name = re.match(r'(\w+)(?=\n\n\*)', seg)
+            genre_name = re.match(r'(.*)(?=\n\n\*)', seg)
             if genre_name:
                 genre = Genre(genre_name[0].lower(), seg)
                 self.post_genres.append(genre)

@@ -12,23 +12,23 @@ if __name__ == '__main__':
         post_url='https://www.reddit.com/r/DnB/comments/wj64wp/this_weeks_new_tunes_technimatic_alix_perez_as/')
     reddit.set_genre_data()
 
-    list_neuro = []
-    list_dancefloor = []
+    spotify = Spotify()
+
+    list_dance_neuro = []
 
     for genre in reddit.post_genres:
-        if genre.name == 'neuro':
-            [list_neuro.append(link) for link in genre.spotify_links]
-        elif genre.name == 'dancefloor':
-            [list_dancefloor.append(link) for link in genre.spotify_links]
+        list_genre = []
+        if 'deep' in genre.name.lower():
+            playlist_id = os.getenv('SPOTIFY_PLAYLIST_DEEP')
+        elif 'general' in genre.name.lower():
+            playlist_id = os.getenv('SPOTIFY_PLAYLIST_GENERAL')
+        else:
+            playlist_id = os.getenv(f'SPOTIFY_PLAYLIST_{genre.name.upper().replace(" ", "")}')
+        [list_genre.append(link) for link in genre.spotify_links]
+        list_songs = spotify.get_list_of_songs_correct_format(list_genre)
+        spotify.add_to_playlist(playlist_id, list_songs)
 
-    spotify = Spotify(playlist_id_to_add_to=os.getenv('SPOTIFY_PLAYLIST'))
-    spotify_neuro = Spotify(playlist_id_to_add_to=os.getenv('SPOTIFY_PLAYLIST_NEURO'))
-    spotify_dancefloor = Spotify(playlist_id_to_add_to=os.getenv('SPOTIFY_PLAYLIST_DANCEFLOOR'))
+        if any([g in genre.name.lower() for g in ['neuro', 'dancefloor']]):
+            list_dance_neuro += list_songs
 
-    list_both = spotify.get_list_of_songs_correct_format(list_neuro+list_dancefloor)
-    list_neuro = spotify_neuro.get_list_of_songs_correct_format(list_neuro)
-    list_dancefloor = spotify_dancefloor.get_list_of_songs_correct_format(list_dancefloor)
-
-    spotify.add_to_playlist(list_both)
-    spotify_neuro.add_to_playlist(list_neuro)
-    spotify_dancefloor.add_to_playlist(list_dancefloor)
+    spotify.add_to_playlist(os.getenv('SPOTIFY_PLAYLIST'), list_dance_neuro)
