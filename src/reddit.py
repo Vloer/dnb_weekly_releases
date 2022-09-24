@@ -105,6 +105,15 @@ class Reddit:
                 genre = Genre(genre_name[0].lower(), seg)
                 self.post_genres.append(genre)
 
+    def get_previous_post(self) -> None:
+        if not self.post_text:
+            url = input('Cannot get previous post without current post. Please provide post url to start from:\n')
+        else:
+            match = re.findall(r'\|Last Week\'s list\|(https?:\/\/reddit.com\/\w+)\|', self.post_text)
+            url = match[0]
+            print(f'Found last week\'s post: {url}')
+        self.get_post(post_url=url)
+
 
 class Genre:
     def __init__(self, name: str, data: str):

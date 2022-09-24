@@ -2,6 +2,8 @@ import requests.auth
 from dotenv import load_dotenv
 import os
 import json
+from spotify_get_token import app
+import base64
 
 load_dotenv()
 
@@ -12,7 +14,7 @@ class Spotify:
         self.endpoint: str = 'https://api.spotify.com/v1'
         self.access_token: str = ''
         self.token_type: str = ''
-        # self.oauth_token: str = os.getenv('SPOTIFY_OAUTH_TOKEN')
+        self.oauth_token: str = os.getenv('SPOTIFY_OAUTH_TOKEN')
         self.auth_headers: dict = {}
         self.all_song_links: list[str] = []
         self.playlist_songs_names: list[str] = []
@@ -22,6 +24,8 @@ class Spotify:
             self.get_token()
 
     def get_token(self) -> None:
+        # if not self.oauth_token:
+        #     app.run()
         url = "https://accounts.spotify.com/api/token"
         client_id = os.getenv('SPOTIFY_CLIENT_ID')
         client_secret = os.getenv('SPOTIFY_CLIENT_SECRET')
@@ -36,6 +40,19 @@ class Spotify:
         self.auth_headers = {
             'Authorization': f'{self.token_type} {self.access_token}'
         }
+    #
+    # def get_token_client_credentials(self) -> None:
+    #     url = "https://accounts.spotify.com/api/token"
+    #     client_id = os.getenv('SPOTIFY_CLIENT_ID')
+    #     client_secret = os.getenv('SPOTIFY_CLIENT_SECRET')
+    #     redirect_uri = 'http://localhost:8888/callback'
+    #     scope = 'playlist-read-private playlist-modify-private'
+    #     auth_code = requests.get(url, {
+    #         'client_id': client_id,
+    #         'response_type': 'code',
+    #         'redirect_uri': redirect_uri,
+    #         'scope': scope
+    #     })
 
     def add_to_playlist(self, playlist_id: str, songs: str | list[str] = None) -> None:
         if isinstance(songs, str):
@@ -45,17 +62,20 @@ class Spotify:
             self.get_playlist_data(playlist)
             songs_to_add = self.get_songs_to_add(songs)
             if songs_to_add:
-                url = f'{self.endpoint}/playlists/{playlist_id}/tracks'
-                headers = self.auth_headers
-                headers['Content-Type'] = 'application/json'
-                headers['Authorization'] = f'Bearer {self.access_token}'
-                data = json.dumps({
-                    'uris': songs_to_add
-                })
+                try:
+                    url = f'{self.endpoint}/playlists/{playlist_id}/tracks'
+                    headers = self.auth_headers
+                    headers['Content-Type'] = 'application/json'
+                    headers['Authorization'] = f'Bearer {self.oauth_token}'
+                    data = json.dumps({
+                        'uris': songs_to_add
+                    })
 
-                res = requests.post(url, headers=headers, data=data)
-                res.raise_for_status()
-            print(f"\nAdded {len(songs_to_add)} new song(s) to playlist {playlist['name']!r}!\n")
+                    res = requests.post(url, headers=headers, data=data)
+                    res.raise_for_status()
+                except requests.exceptions.HTTPError:
+                    raise ValueError(f'Your OAuth token is invalid or expired! Refresh it and place it in the .env file.')
+            print(f"Added {len(songs_to_add)} new song(s) to playlist {playlist['name']!r}!")
         else:
             err = f"Playlist with id {playlist_id!r} does not exist!"
             raise ValueError(err)
@@ -83,8 +103,8 @@ class Spotify:
         song_list = []
         if '/track/' in link:
             return self.convert_track_to_uri(link)
-        if not self.authenticated:
-            self.get_token()
+        # if not self.authenticated:
+        #     self.get_token()
         if '/album/' in link:
             album_id = link.split('/')[-1]
             url = f'{self.endpoint}/albums/{album_id}/tracks'
